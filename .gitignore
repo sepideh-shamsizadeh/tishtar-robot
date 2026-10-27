@@ -218,3 +218,49 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+# ==========================================
+# TISHTAR - Robotics Project
+# ==========================================
+
+# ROS 2 / colcon
+ros2_ws/build/
+ros2_ws/install/
+ros2_ws/log/
+
+# STM32CubeIDE / STM32CubeMX
+firmware/**/Debug/
+firmware/**/Release/
+firmware/**/build/
+firmware/**/*.elf
+firmware/**/*.bin
+firmware/**/*.hex
+firmware/**/*.map
+
+# CMake / C++
+CMakeFiles/
+CMakeCache.txt
+compile_commands.json
+
+# Python virtual environments
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Machine learning
+*.pt
+*.pth
+*.onnx
+
+# Datasets
+datasets/
+data/raw/
+
+# Editors
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# OS
+.DS_Store
+Thumbs.db
