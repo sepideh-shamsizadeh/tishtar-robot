@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="tishtar">
+  <!-- Measured values in metres -->
+  <xacro:property name="chassis_length" value="0.24"/>
+  <xacro:property name="chassis_width" value="0.14"/>
+  <xacro:property name="wheel_radius" value="0.035"/>
+  <xacro:property name="wheelbase" value="0.175"/>
+  <xacro:property name="wheel_track" value="0.22"/>
+
+  <!-- Provisional visualization dimensions: replace after measuring -->
+  <xacro:property name="chassis_thickness" value="0.004"/>
+  <xacro:property name="chassis_center_z" value="0.065"/> <!-- relative to axle-height base_link -->
+  <xacro:property name="wheel_width" value="0.035"/>
+  <xacro:property name="pan_pivot_z" value="0.17"/>
+  <xacro:property name="tilt_above_pan" value="0.04"/>
+
+  <material name="chassis_black"><color rgba="0.13 0.16 0.20 1"/></material>
+  <material name="wheel_grey"><color rgba="0.25 0.27 0.30 1"/></material>
+  <material name="sensor_blue"><color rgba="0.17 0.49 0.85 1"/></material>
+  <material name="camera_green"><color rgba="0.20 0.70 0.48 1"/></material>
+
+  <!-- Ground projection: no map/odom publishers in this visualization demo -->
+  <link name="base_footprint"/>
+  <joint name="base_footprint_to_base_link" type="fixed">
+    <parent link="base_footprint"/><child link="base_link"/>
+    <origin xyz="0 0 ${wheel_radius}" rpy="0 0 0"/>
+  </joint>
+  <!-- base_link at wheel axle height, centered between wheel centers in XY -->
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 ${chassis_center_z}" rpy="0 0 0"/>
+      <geometry><box size="${chassis_length} ${chassis_width} ${chassis_thickness}"/></geometry>
+      <material name="chassis_black"/>
+    </visual>
+  </link>
+
+  <!-- Simple cylindrical stand-ins for mecanum wheels; NOT a kinematic simulation -->
+  <xacro:macro name="wheel" params="name x y">
+    <link name="${name}_wheel_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+        <geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry>
+        <material name="wheel_grey"/>
+      </visual>
+    </link>
+    <joint name="${name}_wheel_joint" type="continuous">
+      <parent link="base_link"/><child link="${name}_wheel_link"/>
+      <origin xyz="${x} ${y} 0" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+    </joint>
+  </xacro:macro>
+  <xacro:wheel name="front_left" x="${wheelbase/2}" y="${wheel_track/2}"/>
+  <xacro:wheel name="front_right" x="${wheelbase/2}" y="${-wheel_track/2}"/>
+  <xacro:wheel name="rear_left" x="${-wheelbase/2}" y="${wheel_track/2}"/>
+  <xacro:wheel name="rear_right" x="${-wheelbase/2}" y="${-wheel_track/2}"/>
+
+  <!-- Temporary camera tower and pan/tilt pivot offsets; not yet measured -->
+  <link name="camera_mount_link">
+    <visual>
+      <origin xyz="0 0 ${pan_pivot_z/2}"/>
+      <geometry><cylinder radius="0.008" length="${pan_pivot_z}"/></geometry>
+      <material name="sensor_blue"/>
+    </visual>
+  </link>
+  <joint name="base_to_camera_mount" type="fixed">
+    <parent link="base_link"/><child link="camera_mount_link"/>
+    <origin xyz="0.035 0 0" rpy="0 0 0"/>
+  </joint>
+  <link name="camera_pan_link">
+    <visual><geometry><cylinder radius="0.022" length="0.018"/></geometry><material name="sensor_blue"/></visual>
+  </link>
+  <joint name="camera_pan_joint" type="revolute">
+    <parent link="camera_mount_link"/><child link="camera_pan_link"/>
+    <origin xyz="0 0 ${pan_pivot_z}" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-1.0" upper="1.0" effort="1.0" velocity="1.0"/>
+  </joint>
+  <link name="camera_tilt_link">
+    <visual><geometry><box size="0.038 0.025 0.024"/></geometry><material name="sensor_blue"/></visual>
+  </link>
+  <joint name="camera_tilt_joint" type="revolute">
+    <parent link="camera_pan_link"/><child link="camera_tilt_link"/>
+    <origin xyz="0 0 ${tilt_above_pan}" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-0.7" upper="0.7" effort="1.0" velocity="1.0"/>
+  </joint>
+  <link name="camera_link">
+    <visual>
+      <origin xyz="0.024 0 0"/>
+      <geometry><box size="0.045 0.025 0.025"/></geometry>
+      <material name="camera_green"/>
+    </visual>
+  </link>
+  <joint name="tilt_to_camera" type="fixed">
+    <parent link="camera_tilt_link"/><child link="camera_link"/>
+    <origin xyz="0.035 0 0" rpy="0 0 0"/>
+  </joint>
+  <link name="camera_optical_frame"/>
+  <joint name="camera_to_optical" type="fixed">
+    <parent link="camera_link"/><child link="camera_optical_frame"/>
+    <origin xyz="0.047 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+  </joint>
+</robot>
